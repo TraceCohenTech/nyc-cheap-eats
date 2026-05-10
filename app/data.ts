@@ -11,6 +11,8 @@ export type Deal = {
   s: string;
   sc: number;
   tr: number;
+  lat?: number;
+  lng?: number;
 };
 
 export type Category = {
@@ -37,6 +39,8 @@ export const CATS: Category[] = [
   { k: "Fast Food Value", l: "Fast Food", i: "🍟", cl: "#f87171" },
   { k: "Prix Fixe Lunch", l: "Prix Fixe", i: "🍽️", cl: "#8b5cf6" },
   { k: "Seasonal", l: "Seasonal", i: "📅", cl: "#6366f1" },
+  { k: "Workspace", l: "Workspaces", i: "💻", cl: "#38bdf8" },
+  { k: "Free Events", l: "Free Events", i: "🎨", cl: "#a78bfa" },
 ];
 
 export const DEALS: Deal[] = [
@@ -179,4 +183,23 @@ export const DEALS: Deal[] = [
   // ─── SEASONAL ───
   { n: "Restaurant Week Summer 2026", p: "600+ restaurants", h: "All 5 boroughs", b: "Citywide", pr: "$30/$45/$60", c: "Seasonal", d: "Jul–Aug 2026", hr: "Lunch & Dinner", desc: "Bi-annual city program. Prix fixe at $30/$45/$60. 600+ restaurants. Excludes Saturdays.", s: "restaurant-week-summer-2026", sc: 8, tr: 9 },
   { n: "Savor NYC (Year-Round)", p: "Various", h: "Citywide", b: "Citywide", pr: "Varies", c: "Seasonal", d: "Year-round", hr: "Varies", desc: "NYC Tourism's year-round dining discovery program between Restaurant Week seasons.", s: "savor-nyc", sc: 6, tr: 7 },
+
+  // ─── HAPPY HOUR (additional from Founder DB) ───
+  { n: "$3 Tacos + $6 Nachos HH", p: "Street Taco", h: "Murray Hill", b: "Manhattan", pr: "$3/taco", c: "Happy Hour Food", d: "Every Day", hr: "4–7pm & 10pm–Close", desc: "$3 mini tacos, $6 nachos, $9 margaritas. Double happy hour: afternoon and late-night.", s: "street-taco-murray-hill-hh", sc: 8, tr: 7, lat: 40.7431, lng: -73.9774 },
+  { n: "$4 Beers + $5 Cocktails", p: "Roey's", h: "West Village", b: "Manhattan", pr: "$4–$5", c: "Happy Hour Food", d: "Every Day", hr: "4–6pm", desc: "$4 beers, $5 cocktails, $6 wine, $6 pizza slices. The West Village daily happy hour.", s: "roeys-west-village-hh", sc: 8, tr: 7, lat: 40.7380, lng: -74.0001 },
+  { n: "$5 Well Drinks All Evening", p: "Tile Bar", h: "East Village", b: "Manhattan", pr: "$5", c: "Happy Hour Food", d: "Every Day", hr: "5–8pm", desc: "$5 well drinks in a classic East Village dive bar setting. No frills, just cheap drinks.", s: "tile-bar-east-village-hh", sc: 8, tr: 7, lat: 40.7285, lng: -73.9840 },
+  { n: "$1 Wings + $1 Oysters HH", p: "Claw Daddy's", h: "Lower East Side", b: "Manhattan", pr: "$1/wing", c: "Happy Hour Food", d: "Every Day", hr: "12–5pm", desc: "$1 wings, $1 oysters, $7 beer, $9 Adult Capri Suns. Daily afternoon deal in LES.", s: "claw-daddys-les-hh", sc: 9, tr: 8, lat: 40.7181, lng: -73.9895 },
+
+  // ─── WORKSPACES ───
+  { n: "Ace Hotel Lobby", p: "Ace Hotel New York", h: "NoMad (20 W 29th St)", b: "Manhattan", pr: "FREE", c: "Workspace", d: "Every Day", hr: "All day", desc: "Massive communal tables, outlets everywhere, free WiFi, no purchase required. Best free coworking in Midtown.", s: "ace-hotel-lobby-workspace", sc: 9, tr: 8, lat: 40.7458, lng: -73.9882 },
+  { n: "Capital One Café", p: "Capital One", h: "Union Sq / Herald Sq", b: "Manhattan", pr: "FREE / 50% off", c: "Workspace", d: "Every Day", hr: "All day", desc: "50% off drinks with CapOne card, free WiFi for everyone, coworking tables. Multiple NYC locations.", s: "capital-one-cafe-workspace", sc: 8, tr: 7, lat: 40.7350, lng: -73.9906 },
+  { n: "Stavros Niarchos Library (NYPL)", p: "New York Public Library", h: "Midtown (455 5th Ave)", b: "Manhattan", pr: "FREE", c: "Workspace", d: "Every Day", hr: "All day", desc: "Free public space, rooftop terrace with city views, incredible WiFi, silent study spaces. Open to all.", s: "stavros-niarchos-library-workspace", sc: 10, tr: 8, lat: 40.7525, lng: -73.9820 },
+  { n: "Devoción Coffee", p: "Devoción", h: "Williamsburg / Flatiron", b: "Brooklyn", pr: "~$5", c: "Workspace", d: "Every Day", hr: "All day", desc: "Fast WiFi, plant-filled industrial space, exceptional specialty coffee. Arrive early for outlets.", s: "devocion-workspace", sc: 8, tr: 9, lat: 40.7161, lng: -73.9646 },
+
+  // ─── FREE EVENTS ───
+  { n: "Chelsea Gallery Openings", p: "Chelsea Gallery District", h: "Chelsea (W 20s–W 30s)", b: "Manhattan", pr: "FREE", c: "Free Events", d: "Thursday", hr: "6–8pm", desc: "Free wine, beer, and snacks while viewing world-class contemporary art at 200+ galleries. Every Thursday.", s: "chelsea-gallery-openings", sc: 9, tr: 8, lat: 40.7496, lng: -74.0040 },
+  { n: "Tech Meetups via Luma", p: "Various NYC venues", h: "Citywide", b: "Citywide", pr: "FREE", c: "Free Events", d: "Varies", hr: "Evenings", desc: "Free pizza, drinks, and networking with founders and VC scouts. Check Luma app for this week's events.", s: "tech-meetups-luma", sc: 8, tr: 9, lat: 40.7580, lng: -73.9855 },
+  { n: "Whitney Museum Free Fridays", p: "Whitney Museum of American Art", h: "Meatpacking District (99 Gansevoort)", b: "Manhattan", pr: "FREE", c: "Free Events", d: "Friday", hr: "5–10pm", desc: "Free museum admission, rooftop drinks, live music, and stunning Hudson River views every Friday evening.", s: "whitney-museum-free-friday", sc: 9, tr: 8, lat: 40.7396, lng: -74.0089 },
+  { n: "Bryant Park Events", p: "Bryant Park Corporation", h: "Midtown (6th Ave & 42nd)", b: "Manhattan", pr: "FREE", c: "Free Events", d: "Varies", hr: "All day", desc: "Rotating free events: movie nights, fitness classes, ice skating in winter, carousel, free concerts.", s: "bryant-park-free-events", sc: 8, tr: 8, lat: 40.7536, lng: -73.9832 },
+  { n: "Smorgasburg Williamsburg", p: "Smorgasburg", h: "East River State Park (Kent Ave)", b: "Brooklyn", pr: "Varies (~$10–$15)", c: "Free Events", d: "Saturday (seasonal)", hr: "11am–6pm", desc: "NYC's legendary outdoor food market with 100+ vendors every Saturday spring through fall. Free entry.", s: "smorgasburg-williamsburg", sc: 9, tr: 9, lat: 40.7177, lng: -73.9649 },
 ];

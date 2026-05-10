@@ -1,12 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import { Search, MapPin, Clock, Star, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { DEALS, CATS, type Deal } from "./data";
+
+const MapView = dynamic(() => import("./MapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[500px] sm:h-[640px] bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center">
+      <div className="text-zinc-500 text-sm">Loading 3D map…</div>
+    </div>
+  ),
+});
 
 function extractPrice(pr: string): number {
   if (!pr) return 999;
@@ -59,7 +69,7 @@ export default function HomePage() {
   const [bor, setBor] = useState("All Boroughs");
   const [sort, setSort] = useState("cat");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "directory">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "directory" | "map">("overview");
 
   const totalDeals = DEALS.length;
   const under5 = DEALS.filter(d => extractPrice(d.pr) <= 5 && d.pr !== "Varies").length;
@@ -158,7 +168,7 @@ export default function HomePage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
             <input
               value={q}
-              onChange={e => { setQ(e.target.value); setActiveTab("directory"); }}
+              onChange={e => { setQ(e.target.value); if (e.target.value) setActiveTab("directory"); }}
               placeholder="Search deals, restaurants, neighborhoods, cuisines..."
               className="w-full pl-10 pr-4 py-3.5 bg-zinc-900 border border-zinc-700 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500 transition-colors"
             />
@@ -169,17 +179,21 @@ export default function HomePage() {
       {/* ═══ TABS ═══ */}
       <div className="sticky top-0 z-20 bg-[#09090b] border-b border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 flex gap-1">
-          {(["overview", "directory"] as const).map(tab => (
+          {([
+            { id: "overview", label: "📊 Overview" },
+            { id: "directory", label: "🗂️ Directory" },
+            { id: "map", label: "🗺️ 3D Map" },
+          ] as const).map(tab => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-3 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
-                activeTab === tab
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 sm:px-5 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                activeTab === tab.id
                   ? "border-amber-500 text-amber-400"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {tab === "overview" ? "📊 Overview" : "🗂️ Directory"}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -550,6 +564,31 @@ export default function HomePage() {
                 });
               })()}
             </div>
+          </div>
+        )}
+
+        {/* ═══ MAP TAB ═══ */}
+        {activeTab === "map" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-zinc-100">3D NYC Deal Map</h2>
+                <p className="text-xs text-zinc-500">Click any pin to see deal details. Drag to explore, scroll to zoom.</p>
+              </div>
+              <select
+                value={cat}
+                onChange={e => setCat(e.target.value)}
+                className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg text-xs text-zinc-300 cursor-pointer outline-none focus:border-amber-500"
+              >
+                {CATS.map(c => (
+                  <option key={c.k} value={c.k}>{c.i} {c.l}</option>
+                ))}
+              </select>
+            </div>
+            <MapView filterCat={cat} />
+            <p className="text-[11px] text-zinc-600 text-center">
+              Requires <code className="bg-zinc-900 px-1 rounded text-amber-500">NEXT_PUBLIC_MAPBOX_TOKEN</code> env var · 3D buildings render at zoom 13+
+            </p>
           </div>
         )}
       </main>
