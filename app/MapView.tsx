@@ -1,170 +1,123 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Map, { Marker, Popup, NavigationControl, Layer, type LayerProps } from "react-map-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import { DEALS, CATS, type Deal } from "./data";
 import { DEAL_COORDS } from "./coordinates";
-import { MapPin, X } from "lucide-react";
-
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-const BUILDING_LAYER: LayerProps = {
-  id: "3d-buildings",
-  source: "composite",
-  "source-layer": "building",
-  filter: ["==", "extrude", "true"],
-  type: "fill-extrusion",
-  minzoom: 13,
-  paint: {
-    "fill-extrusion-color": "#1e293b",
-    "fill-extrusion-height": ["get", "height"],
-    "fill-extrusion-base": ["get", "min_height"],
-    "fill-extrusion-opacity": 0.85,
-  } as Record<string, unknown>,
-};
 
 type MapDeal = Deal & { lat: number; lng: number };
 
-function getColor(category: string): string {
-  const cat = CATS.find(c => c.k === category);
-  return cat?.cl ?? "#f59e0b";
+function getCatColor(category: string): string {
+  return CATS.find(c => c.k === category)?.cl ?? "#f59e0b";
+}
+
+function getCatEmoji(category: string): string {
+  return CATS.find(c => c.k === category)?.i ?? "📍";
+}
+
+function extractPrice(pr: string): number {
+  if (!pr) return 999;
+  if (pr.includes("FREE") || pr.includes("BOGO")) return 0;
+  const m = pr.match(/\$([\d.]+)/);
+  return m ? parseFloat(m[1]) : 999;
 }
 
 export default function MapView({ filterCat }: { filterCat: string }) {
-  const [viewState, setViewState] = useState({
-    longitude: -73.9851,
-    latitude: 40.7450,
-    zoom: 12.5,
-    pitch: 55,
-    bearing: -18,
-  });
-  const [popup, setPopup] = useState<MapDeal | null>(null);
+  // Fix Leaflet default icon path issue in Next.js (not needed since we use CircleMarker)
+  useEffect(() => {
+    // ensures leaflet CSS vars are resolved
+  }, []);
 
-  // Merge DEAL_COORDS with DEALS + inline coords
-  const mappedDeals: MapDeal[] = DEALS.filter(d => {
-    const hasCoordsInline = d.lat !== undefined && d.lng !== undefined;
-    const hasCoordsLookup = d.s in DEAL_COORDS;
-    if (!hasCoordsInline && !hasCoordsLookup) return false;
+  const deals: MapDeal[] = DEALS.filter(d => {
+    const hasCoords =
+      (d.lat !== undefined && d.lng !== undefined) || d.s in DEAL_COORDS;
+    if (!hasCoords) return false;
     if (filterCat !== "All" && d.c !== filterCat) return false;
     return true;
   }).map(d => {
-    if (d.lat !== undefined && d.lng !== undefined) {
-      return d as MapDeal;
-    }
+    if (d.lat !== undefined && d.lng !== undefined) return d as MapDeal;
     const [lat, lng] = DEAL_COORDS[d.s];
     return { ...d, lat, lng };
   });
 
-  const handleMarkerClick = useCallback((deal: MapDeal) => {
-    setPopup(deal);
-  }, []);
-
-  if (!MAPBOX_TOKEN) {
-    return (
-      <div className="w-full h-[500px] sm:h-[640px] bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col items-center justify-center gap-4 text-center px-6">
-        <MapPin size={40} className="text-zinc-600" />
-        <div>
-          <p className="text-zinc-300 font-semibold text-base mb-1">Mapbox token required for 3D map</p>
-          <p className="text-zinc-500 text-sm max-w-md">
-            Add <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-amber-400 text-xs">NEXT_PUBLIC_MAPBOX_TOKEN</code> to your Vercel environment variables.
-          </p>
-          <p className="text-zinc-600 text-xs mt-2">
-            Get a free token at <span className="text-amber-500">mapbox.com</span>
-          </p>
-        </div>
-        <div className="mt-2 bg-zinc-800 rounded-lg px-4 py-3 text-xs text-zinc-400 font-mono text-left">
-          vercel env add NEXT_PUBLIC_MAPBOX_TOKEN
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative w-full h-[500px] sm:h-[640px] rounded-xl overflow-hidden border border-zinc-800">
-      <Map
-        {...viewState}
-        onMove={evt => setViewState(evt.viewState)}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
-        mapboxAccessToken={MAPBOX_TOKEN}
-        antialias={true}
+    <div className="w-full h-[520px] sm:h-[620px] rounded-xl overflow-hidden border border-zinc-800 relative">
+      <MapContainer
+        center={[40.735, -73.985]}
+        zoom={12}
+        style={{ height: "100%", width: "100%", background: "#09090b" }}
+        zoomControl={true}
       >
-        <NavigationControl position="top-right" style={{ background: "#18181b", borderColor: "#3f3f46" }} />
-        <Layer {...BUILDING_LAYER} />
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          subdomains="abcd"
+          maxZoom={19}
+        />
 
-        {mappedDeals.map(deal => {
-          const color = getColor(deal.c);
+        {deals.map(d => {
+          const color = getCatColor(d.c);
+          const v = extractPrice(d.pr);
+          const radius = v === 0 ? 10 : v <= 5 ? 9 : v <= 15 ? 8 : 7;
           return (
-            <Marker
-              key={deal.s}
-              longitude={deal.lng}
-              latitude={deal.lat}
-              anchor="bottom"
-              onClick={e => { e.originalEvent.stopPropagation(); handleMarkerClick(deal); }}
+            <CircleMarker
+              key={d.s}
+              center={[d.lat, d.lng]}
+              radius={radius}
+              pathOptions={{
+                color,
+                fillColor: color,
+                fillOpacity: 0.85,
+                weight: 1.5,
+                opacity: 0.9,
+              }}
             >
-              <div
-                className="w-8 h-8 flex items-center justify-center rounded-full shadow-lg cursor-pointer hover:scale-125 transition-transform border-2 text-sm select-none"
-                style={{ background: `${color}22`, borderColor: color }}
-                title={deal.n}
-              >
-                {CATS.find(c => c.k === deal.c)?.i ?? "📍"}
-              </div>
-            </Marker>
+              <Popup className="nyc-popup">
+                <div className="bg-zinc-900 rounded-xl p-3 min-w-[200px] max-w-[240px]">
+                  <div className="flex items-start gap-2 mb-1">
+                    <span className="text-base leading-none mt-0.5">{getCatEmoji(d.c)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[13px] text-zinc-100 leading-snug">{d.n}</p>
+                      <p className="text-[11px] text-zinc-500 truncate">{d.p}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5 items-center flex-wrap mt-2 mb-2">
+                    <span
+                      className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border"
+                      style={{ background: `${color}20`, color, borderColor: `${color}50` }}
+                    >
+                      {d.pr}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded-full">{d.d}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-3">{d.desc}</p>
+                  {(d.sc >= 9 || d.tr >= 9) && (
+                    <div className="flex gap-2 mt-1.5 text-[10px] font-bold">
+                      {d.sc >= 9 && <span className="text-amber-400">★ TOP VALUE</span>}
+                      {d.tr >= 9 && <span className="text-pink-400">🔥 TRENDING</span>}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </CircleMarker>
           );
         })}
-
-        {popup && (
-          <Popup
-            longitude={popup.lng}
-            latitude={popup.lat}
-            anchor="bottom"
-            onClose={() => setPopup(null)}
-            closeButton={false}
-            offset={36}
-            style={{ padding: 0 }}
-          >
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-3 max-w-[240px] shadow-2xl">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-zinc-100 font-semibold text-[13px] leading-snug">{popup.n}</p>
-                <button onClick={() => setPopup(null)} className="text-zinc-500 hover:text-zinc-300 flex-shrink-0 mt-0.5">
-                  <X size={12} />
-                </button>
-              </div>
-              <p className="text-zinc-500 text-[11px] mb-1.5">{popup.p}</p>
-              <div className="flex gap-1.5 items-center flex-wrap mb-2">
-                <span
-                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: `${getColor(popup.c)}22`, color: getColor(popup.c), border: `1px solid ${getColor(popup.c)}44` }}
-                >
-                  {popup.pr}
-                </span>
-                <span className="text-[10px] text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded-full">{popup.d}</span>
-              </div>
-              <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-3">{popup.desc}</p>
-              {(popup.sc >= 9 || popup.tr >= 9) && (
-                <div className="flex gap-2 mt-2 text-[10px] font-bold">
-                  {popup.sc >= 9 && <span className="text-amber-400">★ TOP VALUE</span>}
-                  {popup.tr >= 9 && <span className="text-pink-400">🔥 TRENDING</span>}
-                </div>
-              )}
-            </div>
-          </Popup>
-        )}
-      </Map>
+      </MapContainer>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-zinc-900/90 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 max-w-[160px]">
-        <p className="text-[10px] font-bold text-zinc-400 mb-2 uppercase tracking-wider">
-          {mappedDeals.length} mapped deals
+      <div className="absolute bottom-4 left-4 z-[1000] bg-zinc-950/90 backdrop-blur border border-zinc-800 rounded-xl p-3 pointer-events-none">
+        <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+          {deals.length} mapped
         </p>
         <div className="space-y-1.5">
           {CATS.slice(1)
-            .filter(c => mappedDeals.some(d => d.c === c.k))
-            .slice(0, 8)
+            .filter(c => deals.some(d => d.c === c.k))
+            .slice(0, 9)
             .map(c => (
               <div key={c.k} className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.cl }} />
-                <span className="text-[10px] text-zinc-400 leading-none">{c.l}</span>
+                <span className="text-[10px] text-zinc-400">{c.l}</span>
               </div>
             ))}
         </div>
