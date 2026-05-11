@@ -90,7 +90,7 @@ function DealCard({
           <button
             onClick={e => { e.stopPropagation(); onToggleSave(d.s); }}
             aria-label={isSaved ? "Unsave" : "Save"}
-            className={`text-[17px] leading-none transition-all ${isSaved ? "text-red-400" : "text-zinc-700 hover:text-zinc-400"}`}
+            className={`text-[18px] leading-none transition-all p-1 -m-1 min-w-[36px] min-h-[36px] flex items-center justify-center ${isSaved ? "text-red-400" : "text-zinc-700 hover:text-zinc-400"}`}
           >
             {isSaved ? "♥" : "♡"}
           </button>
@@ -310,18 +310,18 @@ export default function Page() {
         <div className="max-w-2xl mx-auto px-4">
 
           {/* Row 1: Brand + quick actions */}
-          <div className="flex items-center gap-2 pt-3 pb-2 flex-wrap">
-            <h1 className="font-serif italic text-[20px] text-zinc-100 leading-none tracking-tight mr-1">
+          <div className="flex items-center gap-1.5 pt-3 pb-2">
+            <h1 className="font-serif italic text-[17px] sm:text-[20px] text-zinc-100 leading-none tracking-tight">
               NYC Cheap Eats
             </h1>
-            <span className="font-mono text-[11px] text-zinc-600 mr-auto">
+            <span className="font-mono text-[10px] text-zinc-600 mr-auto">
               {filtered.length}/{DEALS.length}
             </span>
 
             {/* Today toggle */}
             <button
               onClick={() => setTodayOnly(v => !v)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[30px] ${
+              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
                 todayOnly
                   ? "bg-green-500 text-black"
                   : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -329,9 +329,9 @@ export default function Page() {
               title={`${todayCount} deals on ${todayName}`}
             >
               <CalendarDays size={11} />
-              {todayOnly ? todayName : "Today"}
+              <span className="hidden xs:inline sm:inline">{todayOnly ? todayName : "Today"}</span>
               {!todayOnly && (
-                <span className="bg-zinc-700 text-zinc-300 text-[9px] px-1 py-0.5 rounded-full font-mono ml-0.5">
+                <span className="bg-zinc-700 text-zinc-300 text-[9px] px-1 py-0.5 rounded-full font-mono">
                   {todayCount}
                 </span>
               )}
@@ -340,7 +340,7 @@ export default function Page() {
             {/* Saved toggle */}
             <button
               onClick={() => setSavedOnly(v => !v)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[30px] ${
+              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
                 savedOnly
                   ? "bg-red-500 text-white"
                   : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -348,9 +348,9 @@ export default function Page() {
               title="Your saved deals"
             >
               <Heart size={11} className={savedOnly ? "fill-current" : ""} />
-              Saved
+              <span className="hidden xs:inline sm:inline">Saved</span>
               {saved.size > 0 && (
-                <span className={`text-[9px] px-1 py-0.5 rounded-full font-mono ml-0.5 ${savedOnly ? "bg-red-800 text-red-200" : "bg-zinc-700 text-zinc-300"}`}>
+                <span className={`text-[9px] px-1 py-0.5 rounded-full font-mono ${savedOnly ? "bg-red-800 text-red-200" : "bg-zinc-700 text-zinc-300"}`}>
                   {saved.size}
                 </span>
               )}
@@ -359,20 +359,20 @@ export default function Page() {
             {/* Surprise */}
             <button
               onClick={pickSurprise}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-zinc-800 text-zinc-400 hover:bg-amber-500 hover:text-black transition-all min-h-[30px]"
+              className="flex items-center justify-center w-10 rounded-lg text-[11px] font-bold bg-zinc-800 text-zinc-400 hover:bg-amber-500 hover:text-black transition-all min-h-[40px]"
               title="Random deal"
             >
-              <Shuffle size={11} />
+              <Shuffle size={13} />
             </button>
 
             {/* Map toggle */}
             <button
               onClick={() => setShowMap(v => !v)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[30px] ${
+              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
                 showMap ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
               }`}
             >
-              {showMap ? <AlignJustify size={11} /> : <MapIcon size={11} />}
+              {showMap ? <AlignJustify size={13} /> : <MapIcon size={13} />}
               {showMap ? "List" : "Map"}
             </button>
           </div>
@@ -384,8 +384,8 @@ export default function Page() {
               ref={searchRef}
               value={q}
               onChange={e => setQ(e.target.value)}
-              placeholder='Search deals, restaurants, neighborhoods… (press / to focus)'
-              className="w-full pl-8 pr-8 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-[13px] text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500 transition-colors"
+              placeholder="Search deals, restaurants, neighborhoods…"
+              className="w-full pl-8 pr-8 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-[14px] text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500 transition-colors"
             />
             {q && (
               <button onClick={() => setQ("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
@@ -436,7 +436,7 @@ export default function Page() {
               <button
                 key={p.value}
                 onClick={() => setMaxPrice(p.value)}
-                className={`flex-shrink-0 px-2 py-1 rounded-lg text-[11px] font-bold transition-all min-h-[26px] whitespace-nowrap ${
+                className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[36px] whitespace-nowrap ${
                   maxPrice === p.value
                     ? "bg-amber-500 text-black"
                     : "bg-zinc-900 border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
@@ -451,7 +451,7 @@ export default function Page() {
             <select
               value={bor}
               onChange={e => setBor(e.target.value)}
-              className="flex-shrink-0 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500"
+              className="flex-shrink-0 px-2 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500 min-h-[36px]"
             >
               {["All Boroughs","Manhattan","Brooklyn","Queens","Bronx","Staten Island","Citywide"].map(b => (
                 <option key={b}>{b}</option>
@@ -460,7 +460,7 @@ export default function Page() {
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className="flex-shrink-0 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500"
+              className="flex-shrink-0 px-2 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500 min-h-[36px]"
             >
               <option value="cat">Category</option>
               <option value="price">Price ↑</option>
@@ -471,9 +471,9 @@ export default function Page() {
             {hasFilters && (
               <button
                 onClick={clearAll}
-                className="flex-shrink-0 flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors px-1"
+                className="flex-shrink-0 flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors px-2 min-h-[36px]"
               >
-                <X size={10} /> clear
+                <X size={11} /> clear
               </button>
             )}
           </div>
