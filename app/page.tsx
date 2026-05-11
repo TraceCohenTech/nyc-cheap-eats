@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Search, MapPin, Clock, Map as MapIcon, AlignJustify, X, Heart, Shuffle, CalendarDays } from "lucide-react";
 import { DEALS, CATS, type Deal } from "./data";
@@ -199,6 +199,7 @@ export default function Page() {
   const [showMap, setShowMap] = useState(false);
   const [surprise, setSurprise] = useState<Deal | null>(null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Load saved from localStorage on mount
   useEffect(() => {
@@ -206,6 +207,46 @@ export default function Page() {
       const stored = JSON.parse(localStorage.getItem("nyc-saved") ?? "[]");
       setSaved(new Set(stored));
     } catch {}
+  }, []);
+
+  // Keyboard shortcuts: "/" to focus search, Escape to clear
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "/" && document.activeElement !== searchRef.current) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === "Escape" && document.activeElement === searchRef.current) {
+        setQ("");
+        searchRef.current?.blur();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Sync filters to URL for shareable links
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (cat !== "All") params.set("cat", cat);
+    if (bor !== "All Boroughs") params.set("bor", bor);
+    if (sort !== "cat") params.set("sort", sort);
+    if (maxPrice !== "all") params.set("price", maxPrice);
+    if (todayOnly) params.set("today", "1");
+    const str = params.toString();
+    window.history.replaceState(null, "", str ? `?${str}` : window.location.pathname);
+  }, [q, cat, bor, sort, maxPrice, todayOnly]);
+
+  // Restore filters from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("q")) setQ(params.get("q")!);
+    if (params.get("cat")) setCat(params.get("cat")!);
+    if (params.get("bor")) setBor(params.get("bor")!);
+    if (params.get("sort")) setSort(params.get("sort")!);
+    if (params.get("price")) setMaxPrice(params.get("price")!);
+    if (params.get("today") === "1") setTodayOnly(true);
   }, []);
 
   const toggleSave = useCallback((slug: string) => {
@@ -340,9 +381,10 @@ export default function Page() {
           <div className="relative mb-2">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
             <input
+              ref={searchRef}
               value={q}
               onChange={e => setQ(e.target.value)}
-              placeholder="Search deals, restaurants, neighborhoods…"
+              placeholder='Search deals, restaurants, neighborhoods… (press / to focus)'
               className="w-full pl-8 pr-8 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-[13px] text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500 transition-colors"
             />
             {q && (
@@ -411,7 +453,7 @@ export default function Page() {
               onChange={e => setBor(e.target.value)}
               className="flex-shrink-0 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500"
             >
-              {["All Boroughs","Manhattan","Brooklyn","Queens","Bronx","Citywide"].map(b => (
+              {["All Boroughs","Manhattan","Brooklyn","Queens","Bronx","Staten Island","Citywide"].map(b => (
                 <option key={b}>{b}</option>
               ))}
             </select>
