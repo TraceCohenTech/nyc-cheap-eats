@@ -161,6 +161,25 @@ function PriceBadge({ pr, large }: { pr: string; large?: boolean }) {
   );
 }
 
+// ─── Category Hero Banner ─────────────────────────────────────────────────────
+
+function CategoryHero({ cat, count }: { cat: typeof CATS[0]; count: number }) {
+  const img = CAT_IMAGES[cat.k];
+  return (
+    <div className="relative h-24 rounded-xl overflow-hidden mb-4" style={{ outline: `1px solid ${cat.cl}30` }}>
+      {img && <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />}
+      <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/95 via-zinc-950/70 to-zinc-950/30" />
+      <div className="absolute inset-0 flex items-center px-5 gap-4">
+        <span className="text-3xl drop-shadow">{cat.i}</span>
+        <h2 className="font-bold text-[18px] text-white flex-1 leading-tight">{cat.l}</h2>
+        <span className="font-mono text-[11px] text-zinc-400 bg-zinc-900/70 px-2.5 py-1 rounded-full border border-zinc-700/50">
+          {count} deals
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Deal Card ────────────────────────────────────────────────────────────────
 
 function DealCard({
@@ -173,46 +192,36 @@ function DealCard({
   isTried: boolean;
   onClick: () => void;
 }) {
-  const img = CAT_IMAGES[d.c];
   return (
     <article
       onClick={onClick}
       className="relative bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-500 hover:bg-zinc-800/60 transition-all active:scale-[0.97] flex flex-col overflow-hidden"
       style={{ borderTop: `3px solid ${catColor}` }}
     >
-      {/* Photo strip */}
-      <div className="relative h-24 flex-shrink-0 bg-zinc-800">
-        {img && (
-          <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-zinc-900/80" />
-        <div className="absolute bottom-2 right-2">
-          <PriceBadge pr={d.pr} />
-        </div>
-        {isTried && (
-          <span className="absolute top-2 left-2 bg-amber-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-            <CheckCircle size={8} />Tried
-          </span>
-        )}
-        {isSaved && <span className="absolute top-2 right-2 text-red-400 text-[14px] drop-shadow">♥</span>}
-      </div>
-
-      {/* Text content */}
       <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-base leading-none">{catEmoji}</span>
-          <h3 className="font-bold text-[13px] sm:text-[14px] text-white leading-snug line-clamp-2 flex-1">{d.n}</h3>
+        <div className="flex items-start justify-between gap-1 mb-1.5">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <span className="text-base leading-none flex-shrink-0">{catEmoji}</span>
+            <h3 className="font-bold text-[13px] sm:text-[14px] text-white leading-snug line-clamp-2">{d.n}</h3>
+          </div>
+          {isTried && (
+            <span className="flex-shrink-0 bg-amber-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ml-1">
+              <CheckCircle size={7} />Tried
+            </span>
+          )}
         </div>
         <p className="text-[11px] text-zinc-300 truncate mb-1">{d.p}</p>
         <p className="text-[10px] text-zinc-400 flex items-center gap-1 truncate mb-auto">
           <MapPin size={8} className="flex-shrink-0 text-zinc-500" />{d.h}
         </p>
-        <div className="mt-2.5 flex items-center justify-between gap-1">
-          <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium truncate max-w-[75%]">{d.d}</span>
-          <div className="flex gap-1 flex-shrink-0">
-            {d.sc >= 9 && <span className="text-amber-400 text-[11px]">★</span>}
-            {d.tr >= 9 && <span className="text-[11px]">🔥</span>}
-          </div>
+        <div className="mt-2.5 flex items-center justify-between gap-1 flex-wrap">
+          <PriceBadge pr={d.pr} />
+          <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium truncate max-w-[55%]">{d.d}</span>
+        </div>
+        <div className="flex gap-1.5 mt-1.5 items-center">
+          {d.sc >= 9 && <span className="text-amber-400 text-[11px]">★</span>}
+          {d.tr >= 9 && <span className="text-[11px]">🔥</span>}
+          {isSaved && <span className="text-red-400 text-[11px] ml-auto">♥</span>}
         </div>
       </div>
     </article>
@@ -302,14 +311,6 @@ function DealModal({ deal, onClose, isSaved, onToggleSave, isTried, onToggleTrie
         style={{ borderTop: `4px solid ${ci.cl}` }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Photo */}
-        {CAT_IMAGES[deal.c] && (
-          <div className="relative h-40 overflow-hidden rounded-t-3xl sm:rounded-t-2xl sm:hidden">
-            <img src={CAT_IMAGES[deal.c]} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-zinc-900" />
-          </div>
-        )}
-
         <div className="p-6">
           {/* mobile drag handle */}
           <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mb-4 sm:hidden" />
@@ -688,17 +689,10 @@ export default function Page() {
                 <div className="-mx-4 px-4 flex gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {mappedDeals.map(d => {
                     const ci = CATS.find(ct => ct.k === d.c) || CATS[0];
-                    const img = CAT_IMAGES[d.c];
                     return (
                       <div key={d.s} onClick={() => setSelectedDeal(d)}
                         className="flex-shrink-0 w-52 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-500 transition-colors cursor-pointer flex flex-col"
                         style={{ borderTop: `2px solid ${ci.cl}` }}>
-                        {img && (
-                          <div className="relative h-20 flex-shrink-0">
-                            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-zinc-900/70" />
-                          </div>
-                        )}
                         <div className="p-3 flex flex-col flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-lg leading-none">{ci.i}</span>
@@ -767,11 +761,7 @@ export default function Page() {
                   if (!group.length) return null;
                   return (
                     <div key={c.k}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-base leading-none">{c.i}</span>
-                        <h2 className="font-bold text-[15px]" style={{ color: c.cl }}>{c.l}</h2>
-                        <span className="text-zinc-500 text-[12px] font-mono ml-1">{group.length}</span>
-                      </div>
+                      <CategoryHero cat={c} count={group.length} />
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                         {group.map(d => (
                           <DealCard key={d.s} d={d}
