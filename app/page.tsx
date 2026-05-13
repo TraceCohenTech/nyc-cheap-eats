@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Search, MapPin, Clock, Map as MapIcon, AlignJustify, X, Heart, Shuffle, CalendarDays } from "lucide-react";
+import { Search, MapPin, Clock, LayoutGrid, Map as MapIcon, X, Heart, Shuffle, CalendarDays } from "lucide-react";
 import { DEALS, CATS, type Deal } from "./data";
+import { DEAL_COORDS } from "./coordinates";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div className="h-[520px] sm:h-[620px] bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 text-sm">
+    <div className="h-[420px] bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 text-sm">
       Loading map…
     </div>
   ),
@@ -44,139 +45,138 @@ function isDealToday(d: Deal): boolean {
 
 // ─── Price badge ──────────────────────────────────────────────────────────────
 
-function PriceBadge({ pr }: { pr: string }) {
+function PriceBadge({ pr, large }: { pr: string; large?: boolean }) {
   const v = extractPrice(pr);
   let cls = "";
-  if (v === 0)   cls = "bg-emerald-950 text-emerald-300 border-emerald-800";
-  else if (v <= 3)  cls = "bg-green-950 text-green-300 border-green-900";
-  else if (v <= 5)  cls = "bg-lime-950 text-lime-300 border-lime-900";
-  else if (v <= 10) cls = "bg-yellow-950 text-yellow-300 border-yellow-900";
-  else if (v <= 15) cls = "bg-amber-950 text-amber-300 border-amber-900";
-  else if (v <= 30) cls = "bg-orange-950 text-orange-300 border-orange-900";
-  else cls = "bg-red-950 text-red-300 border-red-900";
+  if (v === 0)        cls = "bg-emerald-950 text-emerald-300 border-emerald-700";
+  else if (v <= 3)    cls = "bg-green-950 text-green-300 border-green-800";
+  else if (v <= 5)    cls = "bg-lime-950 text-lime-300 border-lime-800";
+  else if (v <= 10)   cls = "bg-yellow-950 text-yellow-200 border-yellow-800";
+  else if (v <= 15)   cls = "bg-amber-950 text-amber-200 border-amber-800";
+  else if (v <= 30)   cls = "bg-orange-950 text-orange-300 border-orange-800";
+  else                cls = "bg-red-950 text-red-300 border-red-800";
   return (
-    <span className={`border ${cls} px-2 py-0.5 rounded-full text-[11px] font-mono font-bold whitespace-nowrap flex-shrink-0`}>
+    <span className={`border ${cls} px-2 py-0.5 rounded-full font-mono font-bold whitespace-nowrap flex-shrink-0 ${large ? "text-[13px]" : "text-[11px]"}`}>
       {pr}
     </span>
   );
 }
 
-// ─── Deal card ────────────────────────────────────────────────────────────────
+// ─── Deal Card (compact square) ───────────────────────────────────────────────
 
 function DealCard({
-  d, isSaved, onToggleSave,
+  d, catColor, catEmoji, isSaved, onClick,
 }: {
   d: Deal;
+  catColor: string;
+  catEmoji: string;
   isSaved: boolean;
-  onToggleSave: (slug: string) => void;
+  onClick: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ci = CATS.find(c => c.k === d.c) || CATS[0];
-
   return (
     <article
-      onClick={() => setOpen(o => !o)}
-      className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 cursor-pointer hover:border-zinc-700 hover:bg-zinc-800/40 transition-all active:scale-[0.995]"
-      style={{ borderLeft: `3px solid ${ci.cl}` }}
+      onClick={onClick}
+      className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-3 cursor-pointer hover:border-zinc-500 hover:bg-zinc-800/70 transition-all active:scale-[0.96] flex flex-col h-44"
+      style={{ borderTop: `3px solid ${catColor}` }}
     >
-      {/* Name + price + heart */}
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex items-start gap-2 min-w-0 flex-1">
-          <span className="text-[15px] mt-0.5 leading-none flex-shrink-0">{ci.i}</span>
-          <h3 className="font-semibold text-[14px] text-zinc-100 leading-snug">{d.n}</h3>
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <PriceBadge pr={d.pr} />
-          <button
-            onClick={e => { e.stopPropagation(); onToggleSave(d.s); }}
-            aria-label={isSaved ? "Unsave" : "Save"}
-            className={`text-[18px] leading-none transition-all p-1 -m-1 min-w-[36px] min-h-[36px] flex items-center justify-center ${isSaved ? "text-red-400" : "text-zinc-700 hover:text-zinc-400"}`}
-          >
-            {isSaved ? "♥" : "♡"}
-          </button>
-        </div>
-      </div>
-
-      {/* Restaurant */}
-      <p className="text-[12px] text-zinc-500 ml-6 mb-2 truncate">{d.p}</p>
-
-      {/* Meta */}
-      <div className="ml-6 flex items-center gap-2 flex-wrap text-[11px] text-zinc-500">
-        <span className="flex items-center gap-0.5">
-          <MapPin size={9} className="flex-shrink-0 text-zinc-600" />
-          {d.h}
-        </span>
-        <span className="text-zinc-700">·</span>
-        <span className="flex items-center gap-0.5">
-          <Clock size={9} className="flex-shrink-0 text-zinc-600" />
-          {d.hr}
-        </span>
-        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[10px] font-medium">{d.d}</span>
-        {d.sc >= 9 && <span className="text-amber-400 text-[10px] font-bold">★ TOP VALUE</span>}
-        {d.tr >= 9 && <span className="text-pink-400 text-[10px] font-bold">🔥 TRENDING</span>}
-      </div>
-
-      {/* Description */}
-      <p className={`ml-6 mt-2 text-[12px] text-zinc-400 leading-relaxed ${open ? "" : "line-clamp-2"}`}>
-        {d.desc}
-      </p>
-      {!open && d.desc.length > 110 && (
-        <p className="ml-6 mt-0.5 text-[10px] text-zinc-700">tap to expand ↓</p>
+      {isSaved && (
+        <span className="absolute top-2.5 right-2.5 text-red-400 text-[12px] leading-none">♥</span>
       )}
+
+      <div className="flex items-start justify-between mb-2">
+        <span className="text-xl leading-none">{catEmoji}</span>
+        <PriceBadge pr={d.pr} />
+      </div>
+
+      <h3 className="font-bold text-[13px] sm:text-[14px] text-white leading-snug line-clamp-2 mb-1">{d.n}</h3>
+      <p className="text-[11px] sm:text-[12px] text-zinc-300 truncate">{d.p}</p>
+
+      <div className="mt-auto pt-2.5 flex items-end justify-between gap-1">
+        <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium leading-tight flex-shrink-0 truncate max-w-[80%]">{d.d}</span>
+        <div className="flex gap-1 flex-shrink-0">
+          {d.sc >= 9 && <span className="text-amber-400 text-[11px]">★</span>}
+          {d.tr >= 9 && <span className="text-[11px]">🔥</span>}
+        </div>
+      </div>
     </article>
   );
 }
 
-// ─── Surprise modal ───────────────────────────────────────────────────────────
+// ─── Deal Modal (bottom sheet) ────────────────────────────────────────────────
 
-function SurpriseModal({ deal, onClose, isSaved, onToggleSave }: {
+function DealModal({ deal, onClose, isSaved, onToggleSave }: {
   deal: Deal;
   onClose: () => void;
   isSaved: boolean;
   onToggleSave: (slug: string) => void;
 }) {
   const ci = CATS.find(c => c.k === deal.c) || CATS[0];
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+        className="bg-zinc-900 border border-zinc-700 rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto"
         style={{ borderTop: `4px solid ${ci.cl}` }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between mb-4">
-          <span className="text-3xl">{ci.i}</span>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-            <X size={18} />
+        {/* mobile drag handle */}
+        <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mb-5 sm:hidden" />
+
+        <div className="flex items-start gap-3 mb-4">
+          <span className="text-3xl flex-shrink-0">{ci.i}</span>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-[20px] text-white leading-tight mb-0.5">{deal.n}</h2>
+            <p className="text-[14px] text-zinc-300">{deal.p}</p>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors p-1 flex-shrink-0">
+            <X size={20} />
           </button>
         </div>
-        <h2 className="font-serif text-2xl text-zinc-100 italic mb-1">{deal.n}</h2>
-        <p className="text-zinc-500 text-sm mb-3">{deal.p}</p>
+
         <div className="flex gap-2 flex-wrap mb-4">
-          <PriceBadge pr={deal.pr} />
-          <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded-full">{deal.d}</span>
-          <span className="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded-full">{deal.hr}</span>
+          <PriceBadge pr={deal.pr} large />
+          <span className="bg-zinc-800 text-zinc-200 text-[12px] px-3 py-1 rounded-full font-medium">{deal.d}</span>
+          <span className="bg-zinc-800 text-zinc-200 text-[12px] px-3 py-1 rounded-full font-medium flex items-center gap-1">
+            <Clock size={10} />{deal.hr}
+          </span>
         </div>
-        <p className="text-zinc-300 text-sm leading-relaxed mb-3">{deal.desc}</p>
-        <p className="text-zinc-600 text-xs mb-5 flex items-center gap-1">
-          <MapPin size={10} /> {deal.h}
+
+        <p className="text-zinc-300 text-[14px] leading-relaxed mb-4">{deal.desc}</p>
+
+        <p className="text-zinc-400 text-[13px] flex items-center gap-1.5 mb-4">
+          <MapPin size={12} className="text-zinc-500" /> {deal.h}
         </p>
-        <div className="flex gap-2">
+
+        {(deal.sc >= 9 || deal.tr >= 9) && (
+          <div className="flex gap-3 mb-5 py-2 border-t border-zinc-800">
+            {deal.sc >= 9 && <span className="text-amber-400 text-[13px] font-bold">★ TOP VALUE</span>}
+            {deal.tr >= 9 && <span className="text-pink-400 text-[13px] font-bold">🔥 TRENDING</span>}
+          </div>
+        )}
+
+        <div className="flex gap-2.5">
           <button
-            onClick={() => { onToggleSave(deal.s); }}
-            className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
+            onClick={() => onToggleSave(deal.s)}
+            className={`flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all ${
               isSaved
-                ? "bg-red-950 text-red-300 border border-red-900"
-                : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                ? "bg-red-950 text-red-300 border border-red-800"
+                : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
             }`}
           >
-            {isSaved ? "♥ Saved" : "♡ Save"}
+            {isSaved ? "♥ Saved" : "♡ Save deal"}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-xl text-sm font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-colors"
+            className="flex-1 py-3 rounded-xl text-[14px] font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-colors"
           >
             Got it 👍
           </button>
@@ -196,12 +196,11 @@ export default function Page() {
   const [maxPrice, setMaxPrice] = useState("all");
   const [todayOnly, setTodayOnly] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [surprise, setSurprise] = useState<Deal | null>(null);
+  const [view, setView] = useState<"bento" | "map">("bento");
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Load saved from localStorage on mount
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("nyc-saved") ?? "[]");
@@ -209,7 +208,6 @@ export default function Page() {
     } catch {}
   }, []);
 
-  // Keyboard shortcuts: "/" to focus search, Escape to clear
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "/" && document.activeElement !== searchRef.current) {
@@ -225,7 +223,6 @@ export default function Page() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Sync filters to URL for shareable links
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -234,11 +231,11 @@ export default function Page() {
     if (sort !== "cat") params.set("sort", sort);
     if (maxPrice !== "all") params.set("price", maxPrice);
     if (todayOnly) params.set("today", "1");
+    if (view !== "bento") params.set("view", view);
     const str = params.toString();
     window.history.replaceState(null, "", str ? `?${str}` : window.location.pathname);
-  }, [q, cat, bor, sort, maxPrice, todayOnly]);
+  }, [q, cat, bor, sort, maxPrice, todayOnly, view]);
 
-  // Restore filters from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("q")) setQ(params.get("q")!);
@@ -247,6 +244,7 @@ export default function Page() {
     if (params.get("sort")) setSort(params.get("sort")!);
     if (params.get("price")) setMaxPrice(params.get("price")!);
     if (params.get("today") === "1") setTodayOnly(true);
+    if (params.get("view") === "map") setView("map");
   }, []);
 
   const toggleSave = useCallback((slug: string) => {
@@ -258,14 +256,12 @@ export default function Page() {
     });
   }, []);
 
-  // Precompute category counts (unfiltered, for badges)
   const catCounts = useMemo(() => {
     const m: Record<string, number> = { All: DEALS.length };
     CATS.slice(1).forEach(c => { m[c.k] = DEALS.filter(d => d.c === c.k).length; });
     return m;
   }, []);
 
-  // Today info
   const todayName = DAY_NAMES[new Date().getDay()];
   const todayCount = useMemo(() => DEALS.filter(isDealToday).length, []);
 
@@ -290,11 +286,15 @@ export default function Page() {
     return r;
   }, [q, cat, bor, sort, maxPrice, todayOnly, savedOnly, saved]);
 
+  const mappedDeals = useMemo(() =>
+    filtered.filter(d => (d.lat !== undefined && d.lng !== undefined) || d.s in DEAL_COORDS),
+  [filtered]);
+
   const hasFilters = q || cat !== "All" || bor !== "All Boroughs" || maxPrice !== "all" || todayOnly || savedOnly;
 
   function pickSurprise() {
     const pool = filtered.length > 0 ? filtered : DEALS;
-    setSurprise(pool[Math.floor(Math.random() * pool.length)]);
+    setSelectedDeal(pool[Math.floor(Math.random() * pool.length)]);
   }
 
   function clearAll() {
@@ -307,114 +307,115 @@ export default function Page() {
 
       {/* ═══ STICKY HEADER ═══ */}
       <div className="sticky top-0 z-30 bg-[#09090b]/96 backdrop-blur-sm border-b border-zinc-800">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="mx-auto px-4 lg:px-8 max-w-screen-xl">
 
-          {/* Row 1: Brand + quick actions */}
-          <div className="flex items-center gap-1.5 pt-3 pb-2">
-            <h1 className="font-serif italic text-[17px] sm:text-[20px] text-zinc-100 leading-none tracking-tight">
+          {/* Row 1: Brand + actions */}
+          <div className="flex items-center gap-2 pt-3 pb-2">
+            <h1 className="font-serif italic text-[18px] sm:text-[22px] text-white leading-none tracking-tight mr-auto">
               NYC Cheap Eats
             </h1>
-            <span className="font-mono text-[10px] text-zinc-600 mr-auto">
+            <span className="font-mono text-[11px] text-zinc-500 hidden sm:block">
               {filtered.length}/{DEALS.length}
             </span>
 
-            {/* Today toggle */}
             <button
               onClick={() => setTodayOnly(v => !v)}
-              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
-                todayOnly
-                  ? "bg-green-500 text-black"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+              title={`${todayCount} deals today`}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold transition-all ${
+                todayOnly ? "bg-green-500 text-black" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
               }`}
-              title={`${todayCount} deals on ${todayName}`}
             >
-              <CalendarDays size={11} />
-              <span className="hidden xs:inline sm:inline">{todayOnly ? todayName : "Today"}</span>
+              <CalendarDays size={13} />
+              <span className="hidden sm:inline">{todayOnly ? todayName : "Today"}</span>
               {!todayOnly && (
-                <span className="bg-zinc-700 text-zinc-300 text-[9px] px-1 py-0.5 rounded-full font-mono">
-                  {todayCount}
-                </span>
+                <span className="bg-zinc-700 text-zinc-300 text-[10px] px-1.5 py-0.5 rounded-full font-mono">{todayCount}</span>
               )}
             </button>
 
-            {/* Saved toggle */}
             <button
               onClick={() => setSavedOnly(v => !v)}
-              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
-                savedOnly
-                  ? "bg-red-500 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+              title="Saved deals"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold transition-all ${
+                savedOnly ? "bg-red-500 text-white" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
               }`}
-              title="Your saved deals"
             >
-              <Heart size={11} className={savedOnly ? "fill-current" : ""} />
-              <span className="hidden xs:inline sm:inline">Saved</span>
+              <Heart size={13} className={savedOnly ? "fill-current" : ""} />
+              <span className="hidden sm:inline">Saved</span>
               {saved.size > 0 && (
-                <span className={`text-[9px] px-1 py-0.5 rounded-full font-mono ${savedOnly ? "bg-red-800 text-red-200" : "bg-zinc-700 text-zinc-300"}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${savedOnly ? "bg-red-700 text-red-100" : "bg-zinc-700 text-zinc-300"}`}>
                   {saved.size}
                 </span>
               )}
             </button>
 
-            {/* Surprise */}
             <button
               onClick={pickSurprise}
-              className="flex items-center justify-center w-10 rounded-lg text-[11px] font-bold bg-zinc-800 text-zinc-400 hover:bg-amber-500 hover:text-black transition-all min-h-[40px]"
               title="Random deal"
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-amber-500 hover:text-black transition-all"
             >
-              <Shuffle size={13} />
+              <Shuffle size={14} />
             </button>
 
-            {/* Map toggle */}
-            <button
-              onClick={() => setShowMap(v => !v)}
-              className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[40px] ${
-                showMap ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
-            >
-              {showMap ? <AlignJustify size={13} /> : <MapIcon size={13} />}
-              {showMap ? "List" : "Map"}
-            </button>
+            <div className="flex bg-zinc-800 rounded-xl p-1 gap-0.5">
+              <button
+                onClick={() => setView("bento")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+                  view === "bento" ? "bg-amber-500 text-black" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <LayoutGrid size={13} />
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button
+                onClick={() => setView("map")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+                  view === "map" ? "bg-amber-500 text-black" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <MapIcon size={13} />
+                <span className="hidden sm:inline">Map</span>
+              </button>
+            </div>
           </div>
 
           {/* Row 2: Search */}
-          <div className="relative mb-2">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+          <div className="relative mb-2.5">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input
               ref={searchRef}
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Search deals, restaurants, neighborhoods…"
-              className="w-full pl-8 pr-8 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-[14px] text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500 transition-colors"
+              className="w-full pl-10 pr-9 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-[14px] text-white placeholder-zinc-500 outline-none focus:border-amber-500 transition-colors"
             />
             {q && (
-              <button onClick={() => setQ("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
-                <X size={13} />
+              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
+                <X size={14} />
               </button>
             )}
           </div>
 
-          {/* Row 3: Category pills with counts */}
-          <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-4 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {/* Row 3: Category pills */}
+          <div className="flex gap-1.5 overflow-x-auto pb-2.5 -mx-4 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {CATS.map(c => (
               <button
                 key={c.k}
                 onClick={() => setCat(c.k)}
-                className="flex-shrink-0 flex items-center gap-1 pl-2 pr-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all min-h-[28px]"
+                className="flex-shrink-0 flex items-center gap-1 pl-2.5 pr-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all"
                 style={{
-                  border: cat === c.k ? `1px solid ${c.cl}` : "1px solid #27272a",
+                  border: cat === c.k ? `1px solid ${c.cl}` : "1px solid #3f3f46",
                   background: cat === c.k ? `${c.cl}22` : "transparent",
-                  color: cat === c.k ? c.cl : "#52525b",
+                  color: cat === c.k ? c.cl : "#a1a1aa",
                 }}
               >
                 <span>{c.i}</span>
                 <span>{c.l}</span>
                 {c.k !== "All" && (
                   <span
-                    className="text-[9px] font-mono px-1 py-0.5 rounded-full ml-0.5"
+                    className="text-[10px] font-mono px-1.5 py-0.5 rounded-full ml-0.5"
                     style={{
-                      background: cat === c.k ? `${c.cl}30` : "#27272a",
-                      color: cat === c.k ? c.cl : "#52525b",
+                      background: cat === c.k ? `${c.cl}30` : "#3f3f46",
+                      color: cat === c.k ? c.cl : "#71717a",
                     }}
                   >
                     {catCounts[c.k] ?? 0}
@@ -424,8 +425,8 @@ export default function Page() {
             ))}
           </div>
 
-          {/* Row 4: Price filter + borough + sort + clear */}
-          <div className="flex gap-1.5 items-center pb-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {/* Row 4: Price + borough + sort + clear */}
+          <div className="flex gap-2 items-center pb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {[
               { label: "Any $", value: "all" },
               { label: "FREE", value: "0" },
@@ -436,22 +437,20 @@ export default function Page() {
               <button
                 key={p.value}
                 onClick={() => setMaxPrice(p.value)}
-                className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all min-h-[36px] whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all whitespace-nowrap ${
                   maxPrice === p.value
                     ? "bg-amber-500 text-black"
-                    : "bg-zinc-900 border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                    : "bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
                 }`}
               >
                 {p.label}
               </button>
             ))}
-
-            <div className="w-px h-4 bg-zinc-800 flex-shrink-0 mx-0.5" />
-
+            <div className="w-px h-4 bg-zinc-700 flex-shrink-0" />
             <select
               value={bor}
               onChange={e => setBor(e.target.value)}
-              className="flex-shrink-0 px-2 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500 min-h-[36px]"
+              className="flex-shrink-0 px-2.5 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-[12px] text-zinc-300 cursor-pointer outline-none focus:border-amber-500"
             >
               {["All Boroughs","Manhattan","Brooklyn","Queens","Bronx","Staten Island","Citywide"].map(b => (
                 <option key={b}>{b}</option>
@@ -460,20 +459,19 @@ export default function Page() {
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className="flex-shrink-0 px-2 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none focus:border-amber-500 min-h-[36px]"
+              className="flex-shrink-0 px-2.5 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-[12px] text-zinc-300 cursor-pointer outline-none focus:border-amber-500"
             >
               <option value="cat">Category</option>
               <option value="price">Price ↑</option>
               <option value="value">Best Value</option>
               <option value="trend">Trending</option>
             </select>
-
             {hasFilters && (
               <button
                 onClick={clearAll}
-                className="flex-shrink-0 flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors px-2 min-h-[36px]"
+                className="flex-shrink-0 flex items-center gap-1 text-[12px] text-zinc-400 hover:text-white transition-colors px-2"
               >
-                <X size={11} /> clear
+                <X size={12} /> clear
               </button>
             )}
           </div>
@@ -481,79 +479,116 @@ export default function Page() {
       </div>
 
       {/* ═══ CONTENT ═══ */}
-      <main className="max-w-2xl mx-auto px-4 py-4">
+      <main className="mx-auto px-4 lg:px-8 py-5 max-w-screen-xl">
 
-        {showMap ? (
+        {view === "map" ? (
+          /* ── MAP VIEW ── */
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-zinc-500">
-                {cat !== "All" ? cat : "All categories"} · click any dot for details
+              <p className="text-[13px] text-zinc-300">
+                <span className="text-white font-semibold">{mappedDeals.length}</span> deals plotted · tap any dot for details
               </p>
               <select
                 value={cat}
                 onChange={e => setCat(e.target.value)}
-                className="px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[11px] text-zinc-400 cursor-pointer outline-none"
+                className="px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg text-[12px] text-zinc-300 cursor-pointer outline-none hover:border-zinc-500"
               >
                 {CATS.map(c => <option key={c.k} value={c.k}>{c.i} {c.l}</option>)}
               </select>
             </div>
+
             <MapView filterCat={cat} />
-            <p className="text-[10px] text-zinc-700 text-center mt-3">
+
+            <p className="text-[11px] text-zinc-600 text-center mt-2 mb-6">
               OpenStreetMap · CARTO dark tiles · no API key required
             </p>
+
+            {mappedDeals.length > 0 && (
+              <div>
+                <p className="text-[13px] font-semibold text-zinc-300 mb-3 flex items-center gap-2">
+                  <MapPin size={13} className="text-amber-500" />
+                  Deals on the map
+                  <span className="font-mono text-zinc-500 font-normal text-[12px]">{mappedDeals.length}</span>
+                </p>
+                <div className="-mx-4 px-4 flex gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {mappedDeals.map(d => {
+                    const ci = CATS.find(ct => ct.k === d.c) || CATS[0];
+                    return (
+                      <div
+                        key={d.s}
+                        onClick={() => setSelectedDeal(d)}
+                        className="flex-shrink-0 w-48 bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 hover:border-zinc-500 transition-colors cursor-pointer flex flex-col h-44"
+                        style={{ borderTop: `2px solid ${ci.cl}` }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-lg leading-none">{ci.i}</span>
+                          <PriceBadge pr={d.pr} />
+                        </div>
+                        <p className="font-bold text-[13px] text-white line-clamp-2 mb-1 leading-snug">{d.n}</p>
+                        <p className="text-[11px] text-zinc-300 truncate">{d.p}</p>
+                        <div className="mt-auto pt-2 flex items-center justify-between">
+                          <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium">{d.d}</span>
+                          {(d.sc >= 9 || d.tr >= 9) && (
+                            <span className="text-[11px]">
+                              {d.sc >= 9 && "★"}{d.tr >= 9 && "🔥"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
+          /* ── GRID VIEW ── */
           <div>
             {filtered.length === 0 && (
-              <div className="text-center py-20 text-zinc-600">
-                <div className="text-4xl mb-3">🍕</div>
-                <p className="text-sm mb-2">No deals match your filters.</p>
-                <button onClick={clearAll} className="text-amber-400 text-xs hover:underline">
+              <div className="text-center py-24">
+                <div className="text-5xl mb-4">🍕</div>
+                <p className="text-base text-zinc-300 mb-3">No deals match your filters.</p>
+                <button onClick={clearAll} className="text-amber-400 text-sm hover:underline">
                   Clear all filters
                 </button>
               </div>
             )}
 
-            {/* Today banner */}
             {todayOnly && filtered.length > 0 && (
-              <div className="mb-4 px-4 py-2.5 bg-green-950/50 border border-green-900/50 rounded-xl text-sm text-green-300 flex items-center gap-2">
-                <CalendarDays size={14} />
-                <span>
-                  <strong>{filtered.length} deals</strong> open on {todayName}
-                </span>
+              <div className="mb-5 px-4 py-3 bg-green-950/60 border border-green-800 rounded-xl text-[14px] text-green-300 flex items-center gap-2">
+                <CalendarDays size={15} />
+                <span><strong>{filtered.length} deals</strong> open today · {todayName}</span>
               </div>
             )}
 
-            {/* Saved banner */}
             {savedOnly && saved.size === 0 && (
-              <div className="mb-4 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-400 text-center">
-                No saved deals yet — tap ♡ on any deal to save it.
+              <div className="mb-5 px-5 py-4 bg-zinc-900 border border-zinc-700 rounded-xl text-[14px] text-zinc-300 text-center">
+                No saved deals yet — tap any card then ♡ to save it.
               </div>
             )}
 
             {sort === "cat" ? (
-              // Grouped by category
-              <div>
+              <div className="space-y-8">
                 {CATS.slice(1).map(c => {
                   const group = filtered.filter(d => d.c === c.k);
                   if (!group.length) return null;
                   return (
-                    <div key={c.k} className="mb-8">
-                      <div
-                        className="flex items-center gap-2 mb-3 pb-2"
-                        style={{ borderBottom: `1px solid ${c.cl}22` }}
-                      >
-                        <span className="text-[15px] leading-none">{c.i}</span>
-                        <h2 className="font-serif text-[16px] font-normal" style={{ color: c.cl }}>
-                          {c.l}
-                        </h2>
-                        <span className="text-[11px] text-zinc-600 ml-auto font-mono">
-                          {group.length} deal{group.length !== 1 ? "s" : ""}
-                        </span>
+                    <div key={c.k}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-base leading-none">{c.i}</span>
+                        <h2 className="font-bold text-[15px]" style={{ color: c.cl }}>{c.l}</h2>
+                        <span className="text-zinc-500 text-[12px] font-mono ml-1">{group.length}</span>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
                         {group.map(d => (
-                          <DealCard key={d.s} d={d} isSaved={saved.has(d.s)} onToggleSave={toggleSave} />
+                          <DealCard
+                            key={d.s}
+                            d={d}
+                            catColor={c.cl}
+                            catEmoji={c.i}
+                            isSaved={saved.has(d.s)}
+                            onClick={() => setSelectedDeal(d)}
+                          />
                         ))}
                       </div>
                     </div>
@@ -561,11 +596,20 @@ export default function Page() {
                 })}
               </div>
             ) : (
-              // Flat sorted list
-              <div className="flex flex-col gap-2">
-                {filtered.map(d => (
-                  <DealCard key={d.s} d={d} isSaved={saved.has(d.s)} onToggleSave={toggleSave} />
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+                {filtered.map(d => {
+                  const ci = CATS.find(ct => ct.k === d.c) || CATS[0];
+                  return (
+                    <DealCard
+                      key={d.s}
+                      d={d}
+                      catColor={ci.cl}
+                      catEmoji={ci.i}
+                      isSaved={saved.has(d.s)}
+                      onClick={() => setSelectedDeal(d)}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -573,26 +617,25 @@ export default function Page() {
       </main>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-zinc-800 py-6 px-4 text-center mt-8">
-        <p className="text-xs text-zinc-600 mb-1">
+      <footer className="border-t border-zinc-800 py-8 px-4 text-center mt-10">
+        <p className="text-[13px] text-zinc-500 mb-1">
           Prices verified May 2026 · Always call ahead — deals change without notice.
         </p>
-        <p className="text-xs text-zinc-600 mb-3">
+        <p className="text-[12px] text-zinc-600 mb-4">
           Sources: Eater NY · The Infatuation · EatDrinkDeals · MurphGuide · SecretNYC · NY Post
         </p>
-        <p className="text-sm text-zinc-500">
+        <p className="text-[13px] text-zinc-400">
           <a href="https://x.com/Trace_Cohen" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">Twitter</a>
-          {" | "}
+          {" · "}
           <a href="mailto:t@nyvp.com" className="hover:text-amber-400 transition-colors">t@nyvp.com</a>
         </p>
       </footer>
 
-      {/* ═══ SURPRISE MODAL ═══ */}
-      {surprise && (
-        <SurpriseModal
-          deal={surprise}
-          onClose={() => setSurprise(null)}
-          isSaved={saved.has(surprise.s)}
+      {selectedDeal && (
+        <DealModal
+          deal={selectedDeal}
+          onClose={() => setSelectedDeal(null)}
+          isSaved={saved.has(selectedDeal.s)}
           onToggleSave={toggleSave}
         />
       )}
