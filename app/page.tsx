@@ -76,26 +76,35 @@ function DealCard({
   return (
     <article
       onClick={onClick}
-      className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-3 cursor-pointer hover:border-zinc-500 hover:bg-zinc-800/70 transition-all active:scale-[0.96] flex flex-col h-44"
+      className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-4 cursor-pointer hover:border-zinc-500 hover:bg-zinc-800/70 transition-all active:scale-[0.97] flex flex-col h-56"
       style={{ borderTop: `3px solid ${catColor}` }}
     >
       {isSaved && (
-        <span className="absolute top-2.5 right-2.5 text-red-400 text-[12px] leading-none">♥</span>
+        <span className="absolute top-3 right-3 text-red-400 text-[13px] leading-none">♥</span>
       )}
 
-      <div className="flex items-start justify-between mb-2">
-        <span className="text-xl leading-none">{catEmoji}</span>
+      <div className="flex items-start justify-between mb-2.5">
+        <span className="text-2xl leading-none">{catEmoji}</span>
         <PriceBadge pr={d.pr} />
       </div>
 
-      <h3 className="font-bold text-[13px] sm:text-[14px] text-white leading-snug line-clamp-2 mb-1">{d.n}</h3>
-      <p className="text-[11px] sm:text-[12px] text-zinc-300 truncate">{d.p}</p>
+      <h3 className="font-bold text-[14px] sm:text-[15px] text-white leading-snug line-clamp-2 mb-1.5">{d.n}</h3>
+      <p className="text-[12px] text-zinc-300 truncate mb-1">{d.p}</p>
+      <p className="text-[11px] text-zinc-400 flex items-center gap-1 truncate">
+        <MapPin size={9} className="flex-shrink-0 text-zinc-500" />{d.h}
+      </p>
 
-      <div className="mt-auto pt-2.5 flex items-end justify-between gap-1">
-        <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium leading-tight flex-shrink-0 truncate max-w-[80%]">{d.d}</span>
-        <div className="flex gap-1 flex-shrink-0">
-          {d.sc >= 9 && <span className="text-amber-400 text-[11px]">★</span>}
-          {d.tr >= 9 && <span className="text-[11px]">🔥</span>}
+      <div className="mt-auto pt-2.5 space-y-1.5">
+        <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+          <Clock size={9} className="flex-shrink-0 text-zinc-500" />
+          <span className="truncate">{d.hr}</span>
+        </div>
+        <div className="flex items-center justify-between gap-1">
+          <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium truncate max-w-[80%]">{d.d}</span>
+          <div className="flex gap-1 flex-shrink-0">
+            {d.sc >= 9 && <span className="text-amber-400 text-[11px]">★</span>}
+            {d.tr >= 9 && <span className="text-[11px]">🔥</span>}
+          </div>
         </div>
       </div>
     </article>
@@ -517,22 +526,29 @@ export default function Page() {
                       <div
                         key={d.s}
                         onClick={() => setSelectedDeal(d)}
-                        className="flex-shrink-0 w-48 bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 hover:border-zinc-500 transition-colors cursor-pointer flex flex-col h-44"
+                        className="flex-shrink-0 w-52 bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:border-zinc-500 transition-colors cursor-pointer flex flex-col h-56"
                         style={{ borderTop: `2px solid ${ci.cl}` }}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-lg leading-none">{ci.i}</span>
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className="text-2xl leading-none">{ci.i}</span>
                           <PriceBadge pr={d.pr} />
                         </div>
-                        <p className="font-bold text-[13px] text-white line-clamp-2 mb-1 leading-snug">{d.n}</p>
-                        <p className="text-[11px] text-zinc-300 truncate">{d.p}</p>
-                        <div className="mt-auto pt-2 flex items-center justify-between">
-                          <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium">{d.d}</span>
-                          {(d.sc >= 9 || d.tr >= 9) && (
-                            <span className="text-[11px]">
-                              {d.sc >= 9 && "★"}{d.tr >= 9 && "🔥"}
-                            </span>
-                          )}
+                        <p className="font-bold text-[14px] text-white line-clamp-2 mb-1.5 leading-snug">{d.n}</p>
+                        <p className="text-[12px] text-zinc-300 truncate mb-1">{d.p}</p>
+                        <p className="text-[11px] text-zinc-400 flex items-center gap-1 truncate">
+                          <MapPin size={9} className="flex-shrink-0 text-zinc-500" />{d.h}
+                        </p>
+                        <div className="mt-auto pt-2.5 space-y-1.5">
+                          <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+                            <Clock size={9} className="flex-shrink-0 text-zinc-500" />
+                            <span className="truncate">{d.hr}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="bg-zinc-800 text-zinc-200 text-[10px] px-2 py-0.5 rounded-full font-medium">{d.d}</span>
+                            {(d.sc >= 9 || d.tr >= 9) && (
+                              <span className="text-[11px]">{d.sc >= 9 && "★"}{d.tr >= 9 && "🔥"}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
