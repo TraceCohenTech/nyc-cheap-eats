@@ -27,11 +27,11 @@ const CAT_IMAGES: Record<string, string> = {
   "Happy Hour Food":      "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&h=200&fit=crop&q=70",
   "Bottomless Brunch":    "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=600&h=200&fit=crop&q=70",
   "Hot Restaurant Value": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=200&fit=crop&q=70",
-  "Luxury Loophole":      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=200&fit=crop&q=70",
+  "Luxury Loophole":      "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=200&fit=crop&q=70",
   "Street Food & Markets":"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=200&fit=crop&q=70",
   "Pizza Slice Value":    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=200&fit=crop&q=70",
   "Fast Food Value":      "https://images.unsplash.com/photo-1561758033-7e924a3e18ed?w=600&h=200&fit=crop&q=70",
-  "Prix Fixe Lunch":      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=200&fit=crop&q=70",
+  "Prix Fixe Lunch":      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=200&fit=crop&q=70",
   "Seasonal":             "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&h=200&fit=crop&q=70",
   "Workspace":            "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=200&fit=crop&q=70",
   "Free Events":          "https://images.unsplash.com/photo-1501281668745-f7f57925c2b1?w=600&h=200&fit=crop&q=70",
@@ -254,7 +254,7 @@ function DealOfTheDayCard({ deal, isSaved, isTried, onClick }: {
       >
         {/* Background image */}
         <div className="relative h-52 sm:h-64">
-          {img && <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />}
+          {img && <img src={img} alt="" className="w-full h-full object-cover" loading="eager" />}
           <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/95 via-zinc-950/70 to-zinc-950/30" />
           <div className="absolute inset-0 flex items-center p-5 sm:p-8">
             <div className="max-w-lg">
