@@ -520,7 +520,7 @@ export default function Page() {
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans">
 
       {/* ═══ STICKY HEADER ═══ */}
-      <div className="sticky top-0 z-30 bg-[#09090b]/96 backdrop-blur-sm border-b border-zinc-800">
+      <div className="sticky top-0 z-30 bg-[#09090b] border-b border-zinc-800">
         <div className="mx-auto px-4 lg:px-8 max-w-screen-xl">
 
           {/* Row 1: Brand + actions */}
